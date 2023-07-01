@@ -6,7 +6,7 @@ class Program
 {
     static void Main(string[] args)
     {
-        var scraper = new Scraper();
-        Console.WriteLine(scraper.TestScrape(args[0]));
+        var scraper = new Scraper(args[0]);
+        Console.WriteLine(scraper.GetChords());
     }
 }
