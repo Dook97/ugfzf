@@ -1,10 +1,9 @@
 ﻿using System;
-using HtmlAgilityPack;
 using System.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
-using System.Diagnostics;
+using HtmlAgilityPack;
 using JsonTools;
 
 namespace UGScraper;
@@ -15,19 +14,21 @@ public class Scraper
     private static string xpathDataIdentifier = "//div[@class='js-store']";
     // name of the atribute which stores the data
     private static string htmlDataAttr = "data-content";
-    // parsed json containing all data as it was retrieved from ug
-    private JsonNode? ugData;
+    // json containing all data as it was retrieved from UG
+    private JsonNode scrapeData;
 
-    public Scraper()
+    public Scraper(string url)
     {
-        this.ugData = null;
+        this.scrapeData = LoadData(url);
     }
 
     /* System.Net.WebException          - unavailable
      * System.UriFormatException        - invalid URI
      * System.Text.Json.JsonException   - invalid json recieved for deserialization
+     *
+     * TODO: replace Exception with own type
      */
-    public void LoadData(string url)
+    private JsonNode LoadData(string url)
     {
         var web = new HtmlWeb();
         var doc = web.Load(url);
@@ -42,22 +43,26 @@ public class Scraper
         var rawData = HttpUtility.HtmlDecode(htmlDataNode.Attributes[htmlDataAttr].Value);
 
         var json = JsonSerializer.Deserialize<JsonNode>(rawData.AsSpan());
-        Debug.Assert(json is not null); // should never happen
+        if (json is null)
+            throw new Exception();
 
-        ugData = json;
+        return json;
     }
 
     public string GetChords()
     {
-        var contentNode = ugData.GetByPath("store.page.data.tab_view.wiki_tab.content");
+        const string jsonChordPath = "store.page.data.tab_view.wiki_tab.content";
+
+        var contentNode = scrapeData.GetByPath(jsonChordPath);
         if (contentNode is null)
             throw new Exception();
 
         var text = contentNode.ToString();
         var metaTextRgx = new Regex(@"\[/?(ch|tab)\]");
         var clean = metaTextRgx.Replace(text, "");
+
         return clean;
     }
 
-    public JsonNode? DumpAll() => ugData;
+    public JsonNode DumpAll() => scrapeData;
 }
