@@ -43,7 +43,7 @@ namespace UGScraper
             {
                 scrapeData = JsonSerializer.Deserialize<JsonNode>(rawData.AsSpan())!;
             }
-            catch (System.Text.Json.JsonException e)
+            catch (JsonException e)
             {
                 throw new ScraperException("Error when parsing json data", e);
             }
