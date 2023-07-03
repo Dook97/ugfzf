@@ -1,5 +1,6 @@
 using System.Text.Json.Nodes;
 using System.Web;
+using JsonTools;
 
 namespace UGScraper
 {
@@ -17,8 +18,14 @@ namespace UGScraper
          */
         private const string searchMetaUrl =
             @"https://www.ultimate-guitar.com/search.php?search_type={0}&value={1}&page={2}";
+        // path to the json item which stores the search results for the current page
+        private const string jsonSearchResultsPath = "store.page.data.results";
+        // path to the json item which stores info about number of search result pages
+        private const string jsonPaginationPath = "store.page.data.pagination";
+        // TODO: redo this; blocks the ability to retrieve more than a single result page
         private JsonNode? scrapeData;
-        private uint pageCount; // number of search result pages
+        // number of search result pages
+        private uint pageCount;
 
         // values of URL parameter(s) denoting type of requested content
         private enum contentType
@@ -45,6 +52,21 @@ namespace UGScraper
             var searchUrl = string.Format(searchMetaUrl, "title", urlEncodedQuery, 1);
 
             this.scrapeData = ScrapeUrl(searchUrl);
+        }
+
+        // return the results just as we got them from UG
+        public JsonArray GetSearchResultsRaw()
+        {
+            if (this.scrapeData is null)
+                throw new ScraperException("Scraper not properly initialized");
+
+            var node = scrapeData.GetByPath(jsonSearchResultsPath);
+            if (node is null)
+                throw new ScraperException("Unable to find search results in the retrieved document");
+
+            var results = node.AsArray();
+
+            return results;
         }
 
         public JsonNode Dump()
