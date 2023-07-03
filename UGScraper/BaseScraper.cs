@@ -22,6 +22,8 @@ namespace UGScraper
 
         protected JsonNode ScrapeUrl(string url)
         {
+            this.url = url;
+
             var web = new HtmlWeb();
             HtmlDocument doc;
 

@@ -9,7 +9,7 @@ class Program
         var scraper = new PageScraper();
         try {
             scraper.LoadData(args[0]);
-            Console.Out.WriteLine(scraper.GetChords());
+            Console.WriteLine(scraper.GetChords());
         } catch (ScraperException e) {
             Console.Error.WriteLine($"An error occured: {e.Message}");
             Environment.Exit(1);
