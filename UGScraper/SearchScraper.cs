@@ -18,12 +18,12 @@ namespace UGScraper
         private const string searchMetaUrl =
             @"https://www.ultimate-guitar.com/search.php?search_type={0}&value={1}&page={2}";
         private JsonNode? scrapeData;
-        // number of search result pages
-        private uint pageCount;
+        private uint pageCount; // number of search result pages
+
         // values of URL parameter(s) denoting type of requested content
         private enum contentType
         {
-            video = 100, // this is simply a page with a youtube link
+            video = 100, // page with a youtube embed link
             tab = 200,
             chord = 300,
             bass = 400,
@@ -34,10 +34,7 @@ namespace UGScraper
             official = 900, // inaccessible for us; paid
         }
 
-        public SearchScraper() : base()
-        {
-            this.scrapeData = null;
-        }
+        public SearchScraper() : base() { }
 
         public override void LoadData(string searchQuery)
         {

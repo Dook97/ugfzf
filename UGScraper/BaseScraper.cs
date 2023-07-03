@@ -12,13 +12,6 @@ namespace UGScraper
         private const string xpathDataId = "//div[@class='js-store']";
         // name of the atribute which stores the data
         private const string htmlDataAttr = "data-content";
-        // last loaded url
-        protected string? url;
-
-        public BaseScraper()
-        {
-            this.url = null;
-        }
 
         // a method which loads data requested by query from the web
         // this is required before asking the scraper object for any information (like chords or results of a search)
@@ -26,8 +19,6 @@ namespace UGScraper
 
         protected JsonNode ScrapeUrl(string url)
         {
-            this.url = url;
-
             var web = new HtmlWeb();
             HtmlDocument doc;
 
@@ -41,25 +32,23 @@ namespace UGScraper
             }
 
             var htmlDataNode = doc.DocumentNode.SelectSingleNode(xpathDataId);
-            if (htmlDataNode is null)
+            if (htmlDataNode is null || !htmlDataNode.Attributes.Contains(htmlDataAttr))
                 throw new ScraperException($"Unable to find required data in the retrieved document ({url})");
 
             // all data is stored in an html attribute as html encoded json
-            if (!htmlDataNode.Attributes.Contains(htmlDataAttr))
-                throw new ScraperException($"Unable to find required data in the retrieved document ({url})");
             var rawData = HttpUtility.HtmlDecode(htmlDataNode.Attributes[htmlDataAttr].Value);
 
-            JsonNode json;
+            JsonNode scrapeData;
             try
             {
-                json = JsonSerializer.Deserialize<JsonNode>(rawData.AsSpan())!;
+                scrapeData = JsonSerializer.Deserialize<JsonNode>(rawData.AsSpan())!;
             }
             catch (System.Text.Json.JsonException e)
             {
                 throw new ScraperException("Error when parsing json data", e);
             }
 
-            return json;
+            return scrapeData;
         }
 
     }
