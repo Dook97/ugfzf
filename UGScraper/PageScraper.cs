@@ -14,7 +14,7 @@ public class PageScraper : BaseScraper
         this.scrapeData = null;
     }
 
-    public void LoadData(string url)
+    public override void LoadData(string url)
     {
         scrapeData = ScrapeUrl(url);
         this.url = url;
@@ -38,7 +38,8 @@ public class PageScraper : BaseScraper
 
     public string GetChords() => Regex.Replace(GetChordsAnotated(), @"\[/?(ch|tab)\]", "");
 
-    public JsonNode Dump() {
+    public JsonNode Dump()
+    {
         if (scrapeData is null)
             throw new ScraperException("Scraper not correctly initialized");
         return scrapeData;

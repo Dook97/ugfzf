@@ -9,9 +9,9 @@ namespace UGScraper
     public abstract class BaseScraper
     {
         // xpath identifier of the element which stores the data we need to scrape
-        private static string xpathDataId = "//div[@class='js-store']";
+        private const string xpathDataId = "//div[@class='js-store']";
         // name of the atribute which stores the data
-        private static string htmlDataAttr = "data-content";
+        private const string htmlDataAttr = "data-content";
         // last loaded url
         protected string? url;
 
@@ -19,6 +19,10 @@ namespace UGScraper
         {
             this.url = null;
         }
+
+        // a method which loads data requested by query from the web
+        // this is required before asking the scraper object for any information (like chords or results of a search)
+        public abstract void LoadData(string query);
 
         protected JsonNode ScrapeUrl(string url)
         {
