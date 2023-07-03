@@ -42,7 +42,7 @@ namespace UGScraper
             official = 900, // inaccessible for us; paid
         }
 
-        public SearchScraper() : base()
+        public SearchScraper()
         {
             scrapeData = null;
         }
@@ -55,10 +55,10 @@ namespace UGScraper
 
             var baseSearchUrl = string.Format(searchMetaUrl, "title", urlEncodedQuery);
 
-            var initialPage = ScrapeUrl(baseSearchUrl + "1");
-            var pageCountNode = initialPage.GetByPath(jsonPaginationPath);
+            var initialPageUrl = ScrapeUrl(baseSearchUrl + "1");
+            var pageCountNode = initialPageUrl.GetByPath(jsonPaginationPath);
             if (pageCountNode is null)
-                throw new ScraperException("Retrieved document is missing essential data (pagination)");
+                throw new ScraperException($"Retrieved document ({initialPageUrl}) is missing essential data (pagination)");
 
             try
             {
@@ -66,11 +66,12 @@ namespace UGScraper
             }
             catch (System.FormatException e)
             {
-                throw new ScraperException("Couldn't parse data from retrieved document", e);
+                throw new ScraperException($"Couldn't parse data from retrieved document ({initialPageUrl})", e);
             }
 
             this.scrapeData = new JsonNode[this.pageCount];
-            this.scrapeData[0] = initialPage;
+            this.scrapeData[0] = initialPageUrl;
+            // TODO: parallelize
             for (uint i = 1; i < this.pageCount; ++i)
                 scrapeData[i] = ScrapeUrl(baseSearchUrl + $"{i+1}");
         }
@@ -86,9 +87,10 @@ namespace UGScraper
             foreach (var pageData in this.scrapeData)
             {
                 var pageResults = pageData.GetByPath(jsonSearchResultsPath);
-                if (pageResults is null)
-                    throw new ScraperException("idfk");
-                results.AddRange(pageResults.AsArray()!);
+                // one malformed document shouldn't abort the entire thing
+                // TODO: figure out a way to signal that there was an issue
+                if (pageResults is not null)
+                    results.AddRange(pageResults.AsArray()!);
             }
 
             return results;

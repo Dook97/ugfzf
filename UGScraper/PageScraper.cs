@@ -12,7 +12,7 @@ public class PageScraper : BaseScraper
     private JsonNode? scrapeData;
     private string? url;
 
-    public PageScraper() : base()
+    public PageScraper()
     {
         this.scrapeData = null;
         this.url = null;
