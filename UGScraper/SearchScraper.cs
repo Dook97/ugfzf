@@ -33,6 +33,7 @@ public class SearchScraper : BaseScraper
         scrapeData = null;
     }
 
+    // TODO: make it accept type parameters and generally get rid of bad code
     public override void LoadData(string searchQuery)
     {
         var urlEncodedQuery = HttpUtility.UrlEncode(searchQuery);
@@ -88,16 +89,9 @@ public class SearchScraper : BaseScraper
         var searchRecords = new SearchScraperRecord[rawSearchResults.Count];
         for (int i = 0; i < rawSearchResults.Count; ++i)
         {
-            var deserialized = rawSearchResults[i].Deserialize<SearchScraperDeserializationRecord>()!;
-            searchRecords[i] = new SearchScraperRecord(deserialized);
+            var rawRecord = rawSearchResults[i].Deserialize<SearchScraperDeserializationRecord>()!;
+            searchRecords[i] = new SearchScraperRecord(rawRecord);
         }
         return searchRecords;
-    }
-
-    public JsonNode[] Dump()
-    {
-        if (scrapeData is null)
-            throw new ScraperException("Scraper not correctly initialized");
-        return scrapeData;
     }
 }

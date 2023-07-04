@@ -71,7 +71,7 @@ public static class ScraperTools
                 return contentType.powerTab;
             case "Drum Tabs":
             case "DrumTabs":
-                return contentType.powerTab;
+                return contentType.drums;
             case "Ukulele Chords":
             case "UkuleleChords":
                 return contentType.ukulele;

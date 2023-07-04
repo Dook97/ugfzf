@@ -42,11 +42,4 @@ public class PageScraper : BaseScraper
         var metaTextRgx = new Regex(@"\[/?(ch|tab)\]");
         return metaTextRgx.Replace(GetChordsAnotated(), "");
     }
-
-    public JsonNode Dump()
-    {
-        if (scrapeData is null)
-            throw new ScraperException("Scraper not correctly initialized");
-        return scrapeData;
-    }
 }
