@@ -12,13 +12,15 @@ public class SearchScraper : BaseScraper
      * search_type - "title", "band" and possibly other stuff (eg forum posts)
      * value       - URL/percent-encoded query
      * page        - used when results don't fit on a single page; starts at 1
-     * type        - filter by content type; see enum contentType below
+     * type        - filter by content type; see enum contentType
      *             - no "type" parameter means "all"
      *             - multiple allowed types may be specified using multiple parameters
      *               of the form type[n]=value, where n starts at 0
+     *
+     * This is a template search url to be filled by string.Format
      */
     private const string searchMetaUrl =
-        @"https://www.ultimate-guitar.com/search.php?search_type={0}&value={1}&page=";
+        @"https://www.ultimate-guitar.com/search.php?search_type={0}&value={1}&page={{0}}";
     // path to the json item which stores the search results for the current page
     private const string jsonSearchResultsPath = "store.page.data.results";
     // path to the json item which stores info about number of search result pages
@@ -42,7 +44,7 @@ public class SearchScraper : BaseScraper
 
         var baseSearchUrl = string.Format(searchMetaUrl, "title", urlEncodedQuery);
 
-        var initialPageUrl = ScrapeUrl(baseSearchUrl + "1");
+        var initialPageUrl = ScrapeUrl(string.Format(baseSearchUrl, 1));
         var pageCountNode = initialPageUrl.GetByPath(jsonPaginationPath);
         if (pageCountNode is null)
             throw new ScraperException($"Retrieved document ({initialPageUrl}) is missing essential data (pagination)");
@@ -60,7 +62,7 @@ public class SearchScraper : BaseScraper
         this.scrapeData[0] = initialPageUrl;
         // TODO: parallelize
         for (uint i = 1; i < this.pageCount; ++i)
-            scrapeData[i] = ScrapeUrl(baseSearchUrl + $"{i+1}");
+            scrapeData[i] = ScrapeUrl(string.Format(baseSearchUrl, i + 1));
     }
 
     // return the results just as we got them from UG

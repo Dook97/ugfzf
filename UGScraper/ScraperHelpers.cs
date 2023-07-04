@@ -25,59 +25,54 @@ class SearchScraperDeserializationRecord
 public class SearchScraperRecord
 {
     public uint ScrapeUid { get; }
-    public int SongId { get; }
-    public string SongName { get; }
-    public string ArtistName { get; }
+    public int? SongId { get; }
+    public string? SongName { get; }
+    public string? ArtistName { get; }
     public contentType Type { get; }
-    public int Votes { get; }
-    public double Rating { get; }
-    public DateTime Date { get; }
-    public string ArtistUrl { get; }
-    public string TabUrl { get; }
+    public int? Votes { get; }
+    public double? Rating { get; }
+    public DateTime? Date { get; }
+    public string? ArtistUrl { get; }
+    public string? TabUrl { get; }
 
     internal SearchScraperRecord(SearchScraperDeserializationRecord r, uint uid)
     {
         this.ScrapeUid = uid;
-        this.SongId = r.song_id ?? -1;
-        this.SongName = r.song_name!;
-        this.ArtistName = r.artist_name!;
+        this.SongId = r.song_id;
+        this.SongName = r.song_name;
+        this.ArtistName = r.artist_name;
         this.Type = ScraperTools.ToContentType(r.type);
-        this.Votes = r.votes ?? -1;
-        this.Rating = r.rating ?? -1;
-        this.Date = DateTimeOffset.FromUnixTimeSeconds(long.Parse(r.date ?? "0")).DateTime;
-        this.ArtistUrl = r.artist_url!;
-        this.TabUrl = r.tab_url!;
+        this.Votes = r.votes;
+        this.Rating = r.rating;
+        this.Date = r.date is null ? null : DateTimeOffset.FromUnixTimeSeconds(long.Parse(r.date)).DateTime;
+        this.ArtistUrl = r.artist_url;
+        this.TabUrl = r.tab_url;
     }
 }
 
-public static class ScraperTools
+static class ScraperTools
 {
     public static contentType ToContentType(string? strtype)
     {
-        switch (strtype)
+        switch (strtype?.ToLower())
         {
-            case "Tabs":
             case "tabs":
                 return contentType.tab;
-            case "Chords":
             case "chords":
                 return contentType.chord;
-            case "Bass Tabs":
-            case "BassTabs":
+            case "bass tabs":
+            case "basstabs":
                 return contentType.bass;
-            case "Pro":
             case "pro":
                 return contentType.proTab;
-            case "Power":
             case "power":
                 return contentType.powerTab;
-            case "Drum Tabs":
-            case "DrumTabs":
+            case "drum tabs":
+            case "drumtabs":
                 return contentType.drums;
-            case "Ukulele Chords":
-            case "UkuleleChords":
+            case "ukulele chords":
+            case "ukulelechords":
                 return contentType.ukulele;
-            case "Video":
             case "video":
                 return contentType.video;
             default:

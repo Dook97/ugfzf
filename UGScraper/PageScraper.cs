@@ -39,8 +39,5 @@ public class PageScraper : BaseScraper
         return text;
     }
 
-    public string GetChords()
-    {
-        return chordMetaTextRgx.Replace(GetChordsAnotated(), "");
-    }
+    public string GetChords() => chordMetaTextRgx.Replace(GetChordsAnotated(), "");
 }
