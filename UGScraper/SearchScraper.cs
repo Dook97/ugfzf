@@ -28,20 +28,6 @@ public class SearchScraper : BaseScraper
     // number of search result pages
     private uint pageCount;
 
-    // values of URL parameter(s) denoting type of requested content
-    public enum contentType
-    {
-        video = 100, // page with a youtube embed link
-        tab = 200,
-        chord = 300,
-        bass = 400,
-        pro_tab = 500, // inaccessible for us; not plaintext
-        power_tab = 600, // inaccessible for us; not plaintext
-        drums = 700,
-        ukulele = 800,
-        official = 900, // inaccessible for us; paid
-    }
-
     public SearchScraper()
     {
         scrapeData = null;
@@ -101,8 +87,10 @@ public class SearchScraper : BaseScraper
         var rawSearchResults = GetSearchResultsRaw();
         var searchRecords = new SearchScraperRecord[rawSearchResults.Count];
         for (int i = 0; i < rawSearchResults.Count; ++i)
-            // TODO: this is retarded; rework it
-            searchRecords[i] = JsonSerializer.Deserialize<SearchScraperRecord>(rawSearchResults[i].ToJsonString());
+        {
+            var deserialized = rawSearchResults[i].Deserialize<SearchScraperDeserializationRecord>()!;
+            searchRecords[i] = new SearchScraperRecord(deserialized);
+        }
         return searchRecords;
     }
 
