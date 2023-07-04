@@ -24,22 +24,24 @@ class SearchScraperDeserializationRecord
 
 public class SearchScraperRecord
 {
-    public int SongId { get; set; }
-    public string SongName { get; set; }
-    public string ArtistName { get; set; }
-    public contentType Type { get; set; }
-    public int Votes { get; set; }
-    public double Rating { get; set; }
-    public DateTime Date { get; set; }
-    public string ArtistUrl { get; set; }
-    public string TabUrl { get; set; }
+    public uint ScrapeUid { get; }
+    public int SongId { get; }
+    public string SongName { get; }
+    public string ArtistName { get; }
+    public contentType Type { get; }
+    public int Votes { get; }
+    public double Rating { get; }
+    public DateTime Date { get; }
+    public string ArtistUrl { get; }
+    public string TabUrl { get; }
 
-    internal SearchScraperRecord(SearchScraperDeserializationRecord r)
+    internal SearchScraperRecord(SearchScraperDeserializationRecord r, uint uid)
     {
+        this.ScrapeUid = uid;
         this.SongId = r.song_id ?? -1;
         this.SongName = r.song_name!;
         this.ArtistName = r.artist_name!;
-        this.Type = r.type.ToContentType();
+        this.Type = ScraperTools.ToContentType(r.type);
         this.Votes = r.votes ?? -1;
         this.Rating = r.rating ?? -1;
         this.Date = DateTimeOffset.FromUnixTimeSeconds(long.Parse(r.date ?? "0")).DateTime;
@@ -50,7 +52,7 @@ public class SearchScraperRecord
 
 public static class ScraperTools
 {
-    public static contentType ToContentType(this string? strtype)
+    public static contentType ToContentType(string? strtype)
     {
         switch (strtype)
         {

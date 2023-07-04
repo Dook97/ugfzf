@@ -90,7 +90,7 @@ public class SearchScraper : BaseScraper
         for (int i = 0; i < rawSearchResults.Count; ++i)
         {
             var rawRecord = rawSearchResults[i].Deserialize<SearchScraperDeserializationRecord>()!;
-            searchRecords[i] = new SearchScraperRecord(rawRecord);
+            searchRecords[i] = new SearchScraperRecord(rawRecord, (uint)i);
         }
         return searchRecords;
     }

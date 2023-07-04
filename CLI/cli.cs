@@ -13,9 +13,10 @@ class Program
             var results = scraper.GetSearchResults();
             foreach (var result in results)
             {
-                foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(result))
-                    Console.WriteLine($"{descriptor.Name}: {descriptor.GetValue(result)}");
-                Console.WriteLine();
+                // foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(result))
+                //     Console.WriteLine($"{descriptor.Name}: {descriptor.GetValue(result)}");
+                // Console.WriteLine();
+                Console.WriteLine($"{result.ScraperUid};{result.SongName} by {result.ArtistName}");
             }
         } catch (ScraperException e) {
             Console.Error.WriteLine($"An error occured: {e.Message}");

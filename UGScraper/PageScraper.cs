@@ -9,18 +9,20 @@ public class PageScraper : BaseScraper
     private const string jsonContentPath = "store.page.data.tab_view.wiki_tab.content";
     // json containing all data as it was retrieved from UG
     private JsonNode? scrapeData;
+    private Regex chordMetaTextRgx;
     private string? url;
 
     public PageScraper()
     {
         this.scrapeData = null;
         this.url = null;
+        this.chordMetaTextRgx = new Regex(@"\[/?(ch|tab)\]");
     }
 
     public override void LoadData(string url)
     {
-        scrapeData = ScrapeUrl(url);
         this.url = url;
+        scrapeData = ScrapeUrl(url);
     }
 
     public string GetChordsAnotated()
@@ -39,7 +41,6 @@ public class PageScraper : BaseScraper
 
     public string GetChords()
     {
-        var metaTextRgx = new Regex(@"\[/?(ch|tab)\]");
-        return metaTextRgx.Replace(GetChordsAnotated(), "");
+        return chordMetaTextRgx.Replace(GetChordsAnotated(), "");
     }
 }
