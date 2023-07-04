@@ -3,10 +3,9 @@ using System.Text.RegularExpressions;
 using JsonTools;
 
 namespace UGScraper;
-
 public class PageScraper : BaseScraper
 {
-    // JsonTools representation of the path to the actual content of the site (like tabs or chords)
+    // json path to the content of the site (like tabs or chords)
     private const string jsonContentPath = "store.page.data.tab_view.wiki_tab.content";
     // json containing all data as it was retrieved from UG
     private JsonNode? scrapeData;
@@ -38,7 +37,11 @@ public class PageScraper : BaseScraper
         return text;
     }
 
-    public string GetChords() => Regex.Replace(GetChordsAnotated(), @"\[/?(ch|tab)\]", "");
+    public string GetChords()
+    {
+        var metaTextRgx = new Regex(@"\[/?(ch|tab)\]");
+        return metaTextRgx.Replace(GetChordsAnotated(), "");
+    }
 
     public JsonNode Dump()
     {
