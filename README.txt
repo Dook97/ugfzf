@@ -3,7 +3,7 @@
  \_,_\__, |_| /__|_|
      |___/
 
-============================================================
+=== plaintext > web bloat ==================================
 
 ugfzf will, once it's finished, provide a convenient way to search for
 and download chords & tabs from ultimate-guitar.com
