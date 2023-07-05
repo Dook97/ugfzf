@@ -16,22 +16,21 @@ class Program
         return fzfProc;
     }
 
-    static SearchScraperRecord[]? SearchUG(string query)
+    static SearchScraperRecord[] SearchUG(string query)
     {
-        SearchScraperRecord[]? results = null;
+        SearchScraper searchScraper = new();
         try
         {
-            SearchScraper searchScraper = new();
             searchScraper.LoadData(query);
-            results = searchScraper.GetSearchResults();
+            return searchScraper.GetSearchResults();
         }
         catch (ScraperException e)
         {
             Console.Error.WriteLine($"An error occured: {e.Message}");
             Console.Error.WriteLine(e.StackTrace);
             Environment.Exit(1);
+            return null; // someone should tell the compiler about the noreturn function attribute
         }
-        return results;
     }
 
     static string GetFzfUserInput(SearchScraperRecord[] searchResults)
@@ -39,19 +38,12 @@ class Program
         Process fzfProc = MakeFzfProc();
         fzfProc.Start();
 
-        string fzfOut;
-        try
-        {
-            foreach (SearchScraperRecord record in searchResults)
-                fzfProc.StandardInput.WriteLine($"{record.ScrapeUid};{record.SongName} by {record.ArtistName} ({record.Type})");
-            fzfProc.StandardInput.Close();
-            fzfOut = fzfProc.StandardOutput.ReadToEnd();
-        }
-        finally
-        {
-            fzfProc.StandardInput.Close();
-            fzfProc.StandardOutput.Close();
-        }
+        foreach (SearchScraperRecord record in searchResults)
+            fzfProc.StandardInput.WriteLine($"{record.ScrapeUid};{record.SongName} by {record.ArtistName} ({record.Type})");
+        fzfProc.StandardInput.Close();
+
+        string fzfOut = fzfProc.StandardOutput.ReadToEnd();
+        fzfProc.StandardOutput.Close();
 
         fzfProc.WaitForExit();
 
@@ -77,16 +69,15 @@ class Program
 
     static void Main(string[] args)
     {
-        if (args.Length != 1)
-        {
-            Console.Error.WriteLine("Expected exactly 1 argument");
-            Environment.Exit(1);
-        }
+        string query = string.Join(' ', args);
 
-        string query = args[0];
-        SearchScraperRecord[]? searchResults = SearchUG(query);
+        bool isValid(SearchScraperRecord r) => r.ContentUrl is not null
+                                               && r.Type != contentType.official
+                                               && r.Type != contentType.proTab;
 
-        if (searchResults is null)
+        SearchScraperRecord[] searchResults = SearchUG(query).Where(i => isValid(i)).ToArray();
+
+        if (searchResults.Length == 0)
         {
             Console.Error.WriteLine($"Nothing was found for query '{query}'");
             Environment.Exit(1);
@@ -101,7 +92,8 @@ class Program
         SearchScraperRecord r = searchLookup[choiceUid];
 
         PageScraper contentScraper = new();
-        contentScraper.LoadData(r.ContentUrl);
+        // silence nullability warning because we filtered out items without ContentUrl
+        contentScraper.LoadData(r.ContentUrl!);
         Console.WriteLine(contentScraper.GetContent());
     }
 }

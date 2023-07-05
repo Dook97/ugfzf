@@ -73,12 +73,12 @@ public class SearchScraper : BaseScraper
     }
 
     // return the results just as we got them from UG
-    public List<JsonNode>? GetSearchResultsRaw()
+    public List<JsonNode> GetSearchResultsRaw()
     {
-        if (this.scrapeData is null)
-            return null;
-
         List<JsonNode> results = new();
+
+        if (this.scrapeData is null)
+            return results;
 
         foreach (var pageData in this.scrapeData)
         {
@@ -92,12 +92,9 @@ public class SearchScraper : BaseScraper
         return results;
     }
 
-    public SearchScraperRecord[]? GetSearchResults()
+    public SearchScraperRecord[] GetSearchResults()
     {
         var rawSearchResults = GetSearchResultsRaw();
-
-        if (rawSearchResults is null)
-            return null;
 
         var searchRecords = new SearchScraperRecord[rawSearchResults.Count];
         for (int i = 0; i < rawSearchResults.Count; ++i)
