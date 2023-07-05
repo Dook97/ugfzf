@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -58,6 +59,12 @@ public class SearchScraper : BaseScraper
             throw new ScraperException($"Couldn't parse data from retrieved document ({initialPageUrl})", e);
         }
 
+        if (this.pageCount == 0)
+        {
+            this.scrapeData = null;
+            return;
+        }
+
         this.scrapeData = new JsonNode[this.pageCount];
         this.scrapeData[0] = initialPageUrl;
         // TODO: parallelize
@@ -66,10 +73,10 @@ public class SearchScraper : BaseScraper
     }
 
     // return the results just as we got them from UG
-    public List<JsonNode> GetSearchResultsRaw()
+    public List<JsonNode>? GetSearchResultsRaw()
     {
         if (this.scrapeData is null)
-            throw new ScraperException("Scraper not properly initialized");
+            return null;
 
         List<JsonNode> results = new();
 
@@ -85,9 +92,13 @@ public class SearchScraper : BaseScraper
         return results;
     }
 
-    public SearchScraperRecord[] GetSearchResults()
+    public SearchScraperRecord[]? GetSearchResults()
     {
         var rawSearchResults = GetSearchResultsRaw();
+
+        if (rawSearchResults is null)
+            return null;
+
         var searchRecords = new SearchScraperRecord[rawSearchResults.Count];
         for (int i = 0; i < rawSearchResults.Count; ++i)
         {
@@ -95,5 +106,46 @@ public class SearchScraper : BaseScraper
             searchRecords[i] = new SearchScraperRecord(rawRecord, (uint)i);
         }
         return searchRecords;
+    }
+}
+
+class SearchScraperDeserializationRecord
+{
+    public int? song_id { get; init; }
+    public string? song_name { get; init; }
+    public string? artist_name { get; init; }
+    public string? type { get; init; }
+    public int? votes { get; init; }
+    public double? rating { get; init; }
+    public string? date { get; init; }
+    public string? artist_url { get; init; }
+    required public string tab_url { get; init; }
+}
+
+public class SearchScraperRecord
+{
+    public uint ScrapeUid { get; }
+    public int? SongId { get; }
+    public string? SongName { get; }
+    public string? ArtistName { get; }
+    public contentType Type { get; }
+    public int? Votes { get; }
+    public double? Rating { get; }
+    public DateTime? Date { get; }
+    public string? ArtistUrl { get; }
+    public string? TabUrl { get; }
+
+    internal SearchScraperRecord(SearchScraperDeserializationRecord r, uint uid)
+    {
+        this.ScrapeUid = uid;
+        this.SongId = r.song_id;
+        this.SongName = r.song_name;
+        this.ArtistName = r.artist_name;
+        this.Type = ScraperTools.ToContentType(r.type);
+        this.Votes = r.votes;
+        this.Rating = r.rating;
+        this.Date = r.date is null ? null : DateTimeOffset.FromUnixTimeSeconds(long.Parse(r.date)).DateTime;
+        this.ArtistUrl = r.artist_url;
+        this.TabUrl = r.tab_url;
     }
 }

@@ -16,7 +16,7 @@ class Program
         return fzfProc;
     }
 
-    static SearchScraperRecord[] SearchUG(string query)
+    static SearchScraperRecord[]? SearchUG(string query)
     {
         SearchScraperRecord[]? results = null;
         try
@@ -77,12 +77,26 @@ class Program
 
     static void Main(string[] args)
     {
-        SearchScraperRecord[] searchResults = SearchUG(args[0]);
-        string fzfOut = GetFzfUserInput(searchResults);
-        var searchLookup = searchResults.ToDictionary(i => i.ScrapeUid, i => i);
+        if (args.Length != 1)
+        {
+            Console.Error.WriteLine("Expected exactly 1 argument");
+            Environment.Exit(1);
+        }
 
-        uint uid = uint.Parse(fzfOut.Substring(0, fzfOut.IndexOf(';')));
-        SearchScraperRecord r = searchLookup[uid];
+        string query = args[0];
+        SearchScraperRecord[]? searchResults = SearchUG(query);
+
+        if (searchResults is null)
+        {
+            Console.Error.WriteLine($"Nothing was found for query '{query}'");
+            Environment.Exit(1);
+        }
+
+        string fzfOut = GetFzfUserInput(searchResults);
+        var searchLookup = searchResults!.ToDictionary(i => i.ScrapeUid, i => i);
+
+        uint choiceUid = uint.Parse(fzfOut.Substring(0, fzfOut.IndexOf(';')));
+        SearchScraperRecord r = searchLookup[choiceUid];
 
         PageScraper contentScraper = new();
         contentScraper.LoadData(r.TabUrl);
