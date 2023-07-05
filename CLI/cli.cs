@@ -99,7 +99,7 @@ class Program
         SearchScraperRecord r = searchLookup[choiceUid];
 
         PageScraper contentScraper = new();
-        contentScraper.LoadData(r.TabUrl);
+        contentScraper.LoadData(r.ContentUrl);
         Console.WriteLine(contentScraper.GetChords());
     }
 }

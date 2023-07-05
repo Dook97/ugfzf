@@ -99,13 +99,15 @@ public class SearchScraper : BaseScraper
         if (rawSearchResults is null)
             return null;
 
-        var searchRecords = new SearchScraperRecord[rawSearchResults.Count];
+        var searchRecords = new List<SearchScraperRecord>(rawSearchResults.Count);
         for (int i = 0; i < rawSearchResults.Count; ++i)
         {
             var rawRecord = rawSearchResults[i].Deserialize<SearchScraperDeserializationRecord>()!;
-            searchRecords[i] = new SearchScraperRecord(rawRecord, (uint)i);
+
+            try { searchRecords.Add(new SearchScraperRecord(rawRecord, (uint)i)); }
+            finally { /* just ignore the record */ }
         }
-        return searchRecords;
+        return searchRecords.ToArray();
     }
 }
 
@@ -119,7 +121,7 @@ class SearchScraperDeserializationRecord
     public double? rating { get; init; }
     public string? date { get; init; }
     public string? artist_url { get; init; }
-    required public string tab_url { get; init; }
+    public string? tab_url { get; init; }
 }
 
 public class SearchScraperRecord
@@ -133,7 +135,7 @@ public class SearchScraperRecord
     public double? Rating { get; }
     public DateTime? Date { get; }
     public string? ArtistUrl { get; }
-    public string? TabUrl { get; }
+    public string ContentUrl { get; }
 
     internal SearchScraperRecord(SearchScraperDeserializationRecord r, uint uid)
     {
@@ -146,6 +148,10 @@ public class SearchScraperRecord
         this.Rating = r.rating;
         this.Date = r.date is null ? null : DateTimeOffset.FromUnixTimeSeconds(long.Parse(r.date)).DateTime;
         this.ArtistUrl = r.artist_url;
-        this.TabUrl = r.tab_url;
+
+        if (r.tab_url is null)
+            throw new ScraperException("Malformed record is missing tab_url");
+
+        this.ContentUrl = r.tab_url;
     }
 }
