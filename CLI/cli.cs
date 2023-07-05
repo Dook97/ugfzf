@@ -93,13 +93,15 @@ class Program
         }
 
         string fzfOut = GetFzfUserInput(searchResults);
-        var searchLookup = searchResults!.ToDictionary(i => i.ScrapeUid, i => i);
+        var searchLookup = searchResults.ToDictionary(i => i.ScrapeUid, i => i);
 
+        // I'm aware this could theoretically fail, but it really shouldn't so if it does,
+        // the process should terminate and write out a stack trace, which is what it does by default
         uint choiceUid = uint.Parse(fzfOut.Substring(0, fzfOut.IndexOf(';')));
         SearchScraperRecord r = searchLookup[choiceUid];
 
         PageScraper contentScraper = new();
         contentScraper.LoadData(r.ContentUrl);
-        Console.WriteLine(contentScraper.GetChords());
+        Console.WriteLine(contentScraper.GetContent());
     }
 }

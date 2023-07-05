@@ -11,6 +11,9 @@ public abstract class BaseScraper
     private const string xpathDataId = "//div[@class='js-store']";
     // name of the atribute which stores the data
     private const string htmlDataAttr = "data-content";
+    // unique identifier of the next scraped item
+    private uint nextItemUid = 0;
+    protected uint GetNextItemUid() => nextItemUid++;
 
     // a method which loads data requested by query from the web
     // this is required before asking the scraper object for any information (like chords or results of a search)

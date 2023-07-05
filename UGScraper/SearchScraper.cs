@@ -99,15 +99,13 @@ public class SearchScraper : BaseScraper
         if (rawSearchResults is null)
             return null;
 
-        var searchRecords = new List<SearchScraperRecord>(rawSearchResults.Count);
+        var searchRecords = new SearchScraperRecord[rawSearchResults.Count];
         for (int i = 0; i < rawSearchResults.Count; ++i)
         {
             var rawRecord = rawSearchResults[i].Deserialize<SearchScraperDeserializationRecord>()!;
-
-            try { searchRecords.Add(new SearchScraperRecord(rawRecord, (uint)i)); }
-            finally { /* just ignore the record */ }
+            searchRecords[i] = new SearchScraperRecord(rawRecord, this.GetNextItemUid());
         }
-        return searchRecords.ToArray();
+        return searchRecords;
     }
 }
 
@@ -135,7 +133,7 @@ public class SearchScraperRecord
     public double? Rating { get; }
     public DateTime? Date { get; }
     public string? ArtistUrl { get; }
-    public string ContentUrl { get; }
+    public string? ContentUrl { get; }
 
     internal SearchScraperRecord(SearchScraperDeserializationRecord r, uint uid)
     {
@@ -148,10 +146,6 @@ public class SearchScraperRecord
         this.Rating = r.rating;
         this.Date = r.date is null ? null : DateTimeOffset.FromUnixTimeSeconds(long.Parse(r.date)).DateTime;
         this.ArtistUrl = r.artist_url;
-
-        if (r.tab_url is null)
-            throw new ScraperException("Malformed record is missing tab_url");
-
         this.ContentUrl = r.tab_url;
     }
 }
