@@ -1,3 +1,5 @@
+using System;
+
 namespace UGScraper;
 
 public class ScraperRecord
@@ -27,7 +29,7 @@ public class ScraperRecord
         this.Version = r.version;
         this.Votes = r.votes;
         this.Rating = r.rating;
-        this.VersionDescription = r.version_description;
+        this.VersionDescription = r.version_description?.Replace("\r\n", Environment.NewLine);
         // the tp_version check should suffice, but it doesn't hurt to be defensive
         this.ContentIsPlaintext = r.tp_version == 0
                                   && this.Type != contentType.official
@@ -36,7 +38,7 @@ public class ScraperRecord
         this.ArtistUrl = r.artist_url;
         this.ContentUrl = r.tab_url;
         this.Tuning = r.tuning;
-        this.Content = r.content;
+        this.Content = r.content?.Replace("\r\n", Environment.NewLine);
     }
 }
 
