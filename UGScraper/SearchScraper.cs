@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -73,7 +72,7 @@ public class SearchScraper : BaseScraper
     }
 
     // return the results just as we got them from UG
-    public List<JsonNode> GetSearchResultsRaw()
+    private List<JsonNode> GetSearchResultsRaw()
     {
         List<JsonNode> results = new();
 
@@ -99,7 +98,7 @@ public class SearchScraper : BaseScraper
         var searchRecords = new SearchScraperRecord[rawSearchResults.Count];
         for (int i = 0; i < rawSearchResults.Count; ++i)
         {
-            var rawRecord = rawSearchResults[i].Deserialize<SearchScraperDeserializationRecord>()!;
+            var rawRecord = rawSearchResults[i].Deserialize<SearchScraperDeserializationRecord>();
             searchRecords[i] = new SearchScraperRecord(rawRecord, this.GetNextItemUid());
         }
         return searchRecords;
@@ -108,13 +107,15 @@ public class SearchScraper : BaseScraper
 
 class SearchScraperDeserializationRecord
 {
-    public int? song_id { get; init; }
     public string? song_name { get; init; }
     public string? artist_name { get; init; }
     public string? type { get; init; }
-    public int? votes { get; init; }
+    public string? part { get; init; }
+    public uint? version { get; init; }
+    public string? version_description { get; init; }
+    public uint? votes { get; init; }
     public double? rating { get; init; }
-    public string? date { get; init; }
+    public uint? tp_version { get; init; } // version of tab viewer - non-zero means content isn't plaintext
     public string? artist_url { get; init; }
     public string? tab_url { get; init; }
 }
@@ -122,26 +123,34 @@ class SearchScraperDeserializationRecord
 public class SearchScraperRecord
 {
     public uint ScrapeUid { get; }
-    public int? SongId { get; }
     public string? SongName { get; }
     public string? ArtistName { get; }
     public contentType Type { get; }
-    public int? Votes { get; }
+    public string? Part { get; }
+    public uint? Version { get; }
+    public string? VersionDescription { get; }
+    public uint? Votes { get; }
     public double? Rating { get; }
-    public DateTime? Date { get; }
+    public bool ContentIsPlaintext { get; }
     public string? ArtistUrl { get; }
     public string? ContentUrl { get; }
 
     internal SearchScraperRecord(SearchScraperDeserializationRecord r, uint uid)
     {
         this.ScrapeUid = uid;
-        this.SongId = r.song_id;
         this.SongName = r.song_name;
         this.ArtistName = r.artist_name;
         this.Type = ScraperTools.ToContentType(r.type);
+        this.Part = r.part;
+        this.Version = r.version;
+        this.VersionDescription = r.version_description;
         this.Votes = r.votes;
         this.Rating = r.rating;
-        this.Date = r.date is null ? null : DateTimeOffset.FromUnixTimeSeconds(long.Parse(r.date)).DateTime;
+        // the tp_version check should suffice, but it doesn't hurt to be defensive...
+        this.ContentIsPlaintext = r.tp_version == 0
+                                  && this.Type != contentType.official
+                                  && this.Type != contentType.proTab
+                                  && this.Type != contentType.powerTab;
         this.ArtistUrl = r.artist_url;
         this.ContentUrl = r.tab_url;
     }

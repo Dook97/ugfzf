@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Nodes;
+using System.Text.Json.Nodes;
 
 namespace JsonTools;
 public static class JsonTools
@@ -7,10 +7,16 @@ public static class JsonTools
     {
         JsonNode? output = node;
         var pathArr = path.Split(".");
-        for (int i = 0; i < pathArr.Length; ++i) {
-            if (output is null)
+        for (int i = 0; i < pathArr.Length; ++i)
+        {
+            try
+            {
+                output = output?[pathArr[i]];
+            }
+            catch
+            {
                 return null;
-            output = output[pathArr[i]];
+            }
         }
         return output;
     }
