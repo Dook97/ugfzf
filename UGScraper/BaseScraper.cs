@@ -33,12 +33,12 @@ public abstract class BaseScraper
             throw new ScraperException($"Unable to retrieve document ({url})", e);
         }
 
-        var htmlDataNode = doc.DocumentNode.SelectSingleNode(xpathDataId);
+        HtmlNode? htmlDataNode = doc.DocumentNode.SelectSingleNode(xpathDataId);
         if (htmlDataNode is null || !htmlDataNode.Attributes.Contains(htmlDataAttr))
             throw new ScraperException($"Unable to find required data in the retrieved document ({url})");
 
         // all data is stored in an html attribute as html encoded json
-        var rawData = HttpUtility.HtmlDecode(htmlDataNode.Attributes[htmlDataAttr].Value);
+        string? rawData = HttpUtility.HtmlDecode(htmlDataNode.Attributes[htmlDataAttr].Value);
 
         JsonNode scrapeData;
         try

@@ -38,14 +38,14 @@ public class SearchScraper : BaseScraper
     // TODO: make it accept type parameters and generally get rid of bad code
     public override void LoadData(string searchQuery)
     {
-        var urlEncodedQuery = HttpUtility.UrlEncode(searchQuery);
+        string? urlEncodedQuery = HttpUtility.UrlEncode(searchQuery);
         if (urlEncodedQuery is null)
             throw new ScraperException($"Couldn't process search query ({searchQuery})");
 
-        var baseSearchUrl = string.Format(searchMetaUrl, "title", urlEncodedQuery);
+        string baseSearchUrl = string.Format(searchMetaUrl, "title", urlEncodedQuery);
 
-        var initialPageUrl = ScrapeUrl(string.Format(baseSearchUrl, 1));
-        var pageCountNode = initialPageUrl.GetByPath(jsonPaginationPath);
+        JsonNode initialPageUrl = ScrapeUrl(string.Format(baseSearchUrl, 1));
+        JsonNode? pageCountNode = initialPageUrl.GetByPath(jsonPaginationPath);
         if (pageCountNode is null)
             throw new ScraperException($"Retrieved document ({initialPageUrl}) is missing essential data (pagination)");
 
@@ -79,9 +79,9 @@ public class SearchScraper : BaseScraper
         if (this.scrapeData is null)
             return results;
 
-        foreach (var pageData in this.scrapeData)
+        foreach (JsonNode pageData in this.scrapeData)
         {
-            var pageResults = pageData.GetByPath(jsonSearchResultsPath);
+            JsonNode? pageResults = pageData.GetByPath(jsonSearchResultsPath);
             // one malformed document shouldn't abort the entire thing
             // TODO: figure out a way to signal that there was an issue
             if (pageResults is not null)
@@ -91,67 +91,18 @@ public class SearchScraper : BaseScraper
         return results;
     }
 
-    public SearchScraperRecord[] GetSearchResults()
+    public ScraperRecord[] GetSearchResults()
     {
-        var rawSearchResults = GetSearchResultsRaw();
+        List<JsonNode> rawSearchResults = GetSearchResultsRaw();
 
-        var searchRecords = new SearchScraperRecord[rawSearchResults.Count];
+        var searchRecords = new ScraperRecord[rawSearchResults.Count];
         for (int i = 0; i < rawSearchResults.Count; ++i)
         {
-            var rawRecord = rawSearchResults[i].Deserialize<SearchScraperDeserializationRecord>();
-            searchRecords[i] = new SearchScraperRecord(rawRecord, this.GetNextItemUid());
+            var record = rawSearchResults[i].Deserialize<DeserializationRecord>();
+            if (record is null)
+                throw new ScraperException($"Deserialization error");
+            searchRecords[i] = new ScraperRecord(record, this.GetNextItemUid());
         }
         return searchRecords;
-    }
-}
-
-class SearchScraperDeserializationRecord
-{
-    public string? song_name { get; init; }
-    public string? artist_name { get; init; }
-    public string? type { get; init; }
-    public string? part { get; init; }
-    public uint? version { get; init; }
-    public string? version_description { get; init; }
-    public uint? votes { get; init; }
-    public double? rating { get; init; }
-    public uint? tp_version { get; init; } // version of tab viewer - non-zero means content isn't plaintext
-    public string? artist_url { get; init; }
-    public string? tab_url { get; init; }
-}
-
-public class SearchScraperRecord
-{
-    public uint ScrapeUid { get; }
-    public string? SongName { get; }
-    public string? ArtistName { get; }
-    public contentType Type { get; }
-    public string? Part { get; }
-    public uint? Version { get; }
-    public string? VersionDescription { get; }
-    public uint? Votes { get; }
-    public double? Rating { get; }
-    public bool ContentIsPlaintext { get; }
-    public string? ArtistUrl { get; }
-    public string? ContentUrl { get; }
-
-    internal SearchScraperRecord(SearchScraperDeserializationRecord r, uint uid)
-    {
-        this.ScrapeUid = uid;
-        this.SongName = r.song_name;
-        this.ArtistName = r.artist_name;
-        this.Type = ScraperTools.ToContentType(r.type);
-        this.Part = r.part;
-        this.Version = r.version;
-        this.VersionDescription = r.version_description;
-        this.Votes = r.votes;
-        this.Rating = r.rating;
-        // the tp_version check should suffice, but it doesn't hurt to be defensive
-        this.ContentIsPlaintext = r.tp_version == 0
-                                  && this.Type != contentType.official
-                                  && this.Type != contentType.proTab
-                                  && this.Type != contentType.powerTab;
-        this.ArtistUrl = r.artist_url;
-        this.ContentUrl = r.tab_url;
     }
 }

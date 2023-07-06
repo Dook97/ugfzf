@@ -18,7 +18,7 @@ static class ScraperTools
             case "tabs":
                 return contentType.tab;
             case "chords":
-                return contentType.chord;
+                return contentType.chords;
             case "bass tabs":
             case "basstabs":
                 return contentType.bass;
@@ -45,7 +45,7 @@ public enum contentType
 {
     video = 100, // page with a youtube embed link
     tab = 200,
-    chord = 300,
+    chords = 300,
     bass = 400,
     proTab = 500, // inaccessible for us; not plaintext
     powerTab = 600, // inaccessible for us; not plaintext

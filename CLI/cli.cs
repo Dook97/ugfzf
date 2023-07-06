@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using UGScraper;
 
 namespace CLI;
@@ -11,16 +12,16 @@ class Program
     {
         Process fzfProc = new();
         fzfProc.StartInfo.FileName = "fzf";
-        fzfProc.StartInfo.Arguments = "-d \";\" --with-nth=2 --nth=1 --border --border-label \" select a song \"";
+        fzfProc.StartInfo.Arguments = "-d \";\" --with-nth=2 --nth=1";
         fzfProc.StartInfo.RedirectStandardInput = true;
         fzfProc.StartInfo.RedirectStandardOutput = true;
         return fzfProc;
     }
 
-    static SearchScraperRecord[] SearchUG(string query)
+    static ScraperRecord[] SearchUG(string query)
     {
         SearchScraper searchScraper = new();
-        SearchScraperRecord[] results;
+        ScraperRecord[] results;
         try
         {
             searchScraper.LoadData(query);
@@ -37,20 +38,20 @@ class Program
         return results;
     }
 
-    static string GetFzfUserInput(SearchScraperRecord[] searchResults)
+    static string GetFzfUserInput(ScraperRecord[] searchResults)
     {
         Process fzfProc = MakeFzfProc();
         fzfProc.Start();
 
-        // {uid};{song_name} by {artist} ({content_type}) ?v{version}
+        // {uid};{song_name} ?{part} by {artist} ({content_type}) ?v{version}
         StringBuilder sb = new();
-        foreach (SearchScraperRecord r in searchResults)
+        foreach (ScraperRecord r in searchResults)
         {
             sb.Clear();
             string?[] tokens = {
-                $"{r.ScrapeUid};{r.SongName}",
+                $"{r.ScrapeUid};{r.SongName ?? "Unknown"}",
                 r.Part,
-                $"by {r.ArtistName}",
+                $"by {r.ArtistName ?? "Unknown"}",
                 $"({r.Type})",
                 (r.Version ?? 1) != 1 ? $"v{r.Version}" : null
             };
@@ -85,6 +86,24 @@ class Program
         return fzfOut;
     }
 
+    static string PageContentPrettify(ScraperRecord r)
+    {
+        if (r.Content is null || r.Content.Trim().Length == 0)
+            return "### NO CONTENT ###";
+
+        if (!r.ContentIsPlaintext)
+            return "### CONTENT NOT PLAINTEXT ###";
+
+        switch (r.Type)
+        {
+            case contentType.video:
+                return "https://www.youtube.com/watch?v=" + r.Content;
+            default:
+                var contentMetaTextRgx = new Regex(@"\[/?(ch|tab)\]");
+                return contentMetaTextRgx.Replace(r.Content, "");
+        }
+    }
+
     static void Main(string[] args)
     {
         string query = string.Join(' ', args);
@@ -92,8 +111,8 @@ class Program
         // TODO: maybe start a separate thread which shows some animation?
         Console.Error.WriteLine("Searching - this may take a while");
 
-        bool isValid(SearchScraperRecord r) => r.ContentUrl is not null && r.ContentIsPlaintext;
-        SearchScraperRecord[] searchResults = SearchUG(query).Where(i => isValid(i)).ToArray();
+        bool isValid(ScraperRecord r) => r.ContentUrl is not null && r.ContentIsPlaintext;
+        ScraperRecord[] searchResults = SearchUG(query).Where(i => isValid(i)).ToArray();
 
         if (searchResults.Length == 0)
         {
@@ -101,26 +120,24 @@ class Program
             Environment.Exit(1);
         }
 
-        string fzfOut = GetFzfUserInput(searchResults);
         var searchLookup = searchResults.ToDictionary(i => i.ScrapeUid, i => i);
-
-        // I'm aware this could theoretically fail, but it really shouldn't so if it does,
-        // the process should terminate and write out a stack trace anyway
+        string fzfOut = GetFzfUserInput(searchResults);
         uint choiceUid = uint.Parse(fzfOut.Substring(0, fzfOut.IndexOf(';')));
-        SearchScraperRecord searchRecord = searchLookup[choiceUid];
+        ScraperRecord searchRecord = searchLookup[choiceUid];
 
         PageScraper pageScraper = new();
-        pageScraper.LoadData(searchRecord.ContentUrl!);
-        PageScraperRecord pageRecord = pageScraper.GetRecord();
+        pageScraper.LoadData(searchRecord.ContentUrl!); // safe - records with null url were discarded
+        ScraperRecord pageRecord = pageScraper.GetRecord();
 
         Console.WriteLine(
                 $"""
+                =======================================================
                 Song: {pageRecord.SongName}
                 Artist: {pageRecord.ArtistName}
                 URL: {pageRecord.ContentUrl}
-                ==================================================
+                =======================================================
 
-                {pageRecord.Content}
+                {PageContentPrettify(pageRecord)}
                 """);
     }
 }
