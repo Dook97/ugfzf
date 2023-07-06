@@ -146,7 +146,7 @@ public class SearchScraperRecord
         this.VersionDescription = r.version_description;
         this.Votes = r.votes;
         this.Rating = r.rating;
-        // the tp_version check should suffice, but it doesn't hurt to be defensive...
+        // the tp_version check should suffice, but it doesn't hurt to be defensive
         this.ContentIsPlaintext = r.tp_version == 0
                                   && this.Type != contentType.official
                                   && this.Type != contentType.proTab

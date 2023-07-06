@@ -46,15 +46,17 @@ class Program
         StringBuilder sb = new();
         foreach (SearchScraperRecord r in searchResults)
         {
-            sb.Append($"{r.ScrapeUid};{r.SongName}");
-            if (r.Part is not null && r.Part.Trim() != "")
-                sb.Append($" {r.Part}");
-            sb.Append($" by {r.ArtistName} ({r.Type})");
-            if ((r.Version ?? 1) != 1)
-                sb.Append($" v{r.Version}");
+            sb.Clear();
+            string?[] tokens = {
+                $"{r.ScrapeUid};{r.SongName}",
+                r.Part,
+                $"by {r.ArtistName}",
+                $"({r.Type})",
+                (r.Version ?? 1) != 1 ? $"v{r.Version}" : null
+            };
+            sb.AppendJoin(' ', tokens.Where(i => i is not null && i.Length != 0));
 
             fzfProc.StandardInput.WriteLine(sb.ToString());
-            sb.Clear();
         }
         fzfProc.StandardInput.Close();
 
@@ -87,6 +89,9 @@ class Program
     {
         string query = string.Join(' ', args);
 
+        // TODO: maybe start a separate thread which shows some animation?
+        Console.Error.WriteLine("Searching - this may take a while");
+
         bool isValid(SearchScraperRecord r) => r.ContentUrl is not null && r.ContentIsPlaintext;
         SearchScraperRecord[] searchResults = SearchUG(query).Where(i => isValid(i)).ToArray();
 
@@ -102,12 +107,20 @@ class Program
         // I'm aware this could theoretically fail, but it really shouldn't so if it does,
         // the process should terminate and write out a stack trace anyway
         uint choiceUid = uint.Parse(fzfOut.Substring(0, fzfOut.IndexOf(';')));
-        SearchScraperRecord r = searchLookup[choiceUid];
+        SearchScraperRecord searchRecord = searchLookup[choiceUid];
 
-        PageScraper contentScraper = new();
-        // silence nullability warning because we filtered out items without ContentUrl
-        contentScraper.LoadData(r.ContentUrl!);
+        PageScraper pageScraper = new();
+        pageScraper.LoadData(searchRecord.ContentUrl!);
+        PageScraperRecord pageRecord = pageScraper.GetRecord();
 
-        Console.WriteLine(contentScraper.GetRecord().Content);
+        Console.WriteLine(
+                $"""
+                Song: {pageRecord.SongName}
+                Artist: {pageRecord.ArtistName}
+                URL: {pageRecord.ContentUrl}
+                ==================================================
+
+                {pageRecord.Content}
+                """);
     }
 }
