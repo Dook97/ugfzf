@@ -5,5 +5,7 @@ TODO list
 * running the program again over previously loaded data
 * changing search type (title, band or general)
 * user specified desired type of content (chords, tab, bass, ukulele, video or a subset of these)
+  -> partly done, but it would be nice, if the search itself was limited to the options
 * user specified output format
 * user specified fzf entry format
+* scrape directly by url(s)
