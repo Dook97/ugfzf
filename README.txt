@@ -1,31 +1,59 @@
- _  _ __ _ / _|___/ _|
-| || / _` |  _|_ /  _|
- \_,_\__, |_| /__|_|
-     |___/
+                    _  _ __ _ / _|___/ _|
+                   | || / _` |  _|_ /  _|
+                    \_,_\__, |_| /__|_|
+                        |___/
 
-=== plaintext > web bloat ==================================
+              ultimate-guitar.com fuzzy-finder
+                by Dook97 (aka Jan Doskočil)
 
-ugfzf provides a convenient way to search for and download chords and
-tabs from the comfort of your terminal window. It uses
-ultimate-guitar.com as its source for this data.
-
-Usage is pretty straight forward:
-
-ugfzf [your search query]
-
-...the rest is intuitive, so I trust you'll figure it out on your own.
-
-I take no responsibility for what you do with the program - using it
-is probably against TOS, so it's for research purpouses only *wink*
-
-dependencies:
-  * dotnet runtime >= 7.x
-  * fzf [github.com/junegunn/fzf]
-
-If you want to build it yourself (which at this point you have to),
-you also need dotnet sdk >= 7.x
+                        USER'S GUIDE
 
 ============================================================
 
-author: Jan Doskočil
-(pls don't sue me)
+                          [ABOUT]
+
+This brief document serves as a guide to new users of the
+ugfzf program.
+
+ugfzf serves its user by allowing easy acces to the chords
+and tabs found on ultimate-guitar.com from the comfort of
+the terminal window, saving him the necessity of painful
+interaction with modern web design.
+
+                       [INSTALLATION]
+
+You will need the following:
+  * fzf in your PATH (github.com/junegunn/fzf)
+  * dotnet runtime >=7.x
+  * dotnet sdk >=7.x
+
+Then simply clone this repo, cd into it and call
+
+                       dotnet publish
+
+A binary will appear in "./CLI/bin/Release/net7.x"
+
+                          [USAGE]
+
+Using the program is very straightforward. Invoke it with
+
+                     ugfzf [your query]
+
+After it is done loading the required data, a selection
+window will appear. You can type to narrow down your options
+or change your selection with the up and down keys. Select
+the item you like by hitting enter. If you change your mind,
+you can also quit without choosing anything - just hit Esc,
+Ctrl-c or Ctrl-d.
+
+The contents of your selection will then be printed to
+stdout.
+
+                      [COMPATIBILITY]
+
+The program was tested on Linux and Windows 10. Macs will
+most probably do just fine, but you should really find it in
+you and use an OS for people with some notion of self-respect.
+
+============================================================
+github.com/Dook97/ugfzf
