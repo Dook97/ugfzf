@@ -2,19 +2,14 @@ using System;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using UGScraper;
-using CommandLine;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 
 namespace CLI;
 
-public class Cli
+class Cli
 {
-    private const string youtubeWatchUrl = "https://www.youtube.com/watch?v=";
-
-    private Regex contentMetaTextRgx { get; }
-    private Process fzfProc { get; }
     private SearchScraper searchScraper { get; }
     private PageScraper pageScraper { get; }
     private Options opts { get; }
@@ -24,18 +19,13 @@ public class Cli
     private ScraperRecord[]? searchResults { get; set; }
     private ScraperRecord[]? pagesContent { get; set; }
 
-    public Cli(string[] args)
+    public Cli(Options opts)
     {
-        this.contentMetaTextRgx = new Regex(@"\[/?(ch|tab)\]");
         this.searchScraper = new();
         this.pageScraper = new();
-        this.fzfProc = MakeFzfProc();
-        this.opts = Parser.Default.ParseArguments<Options>(args).Value;
+        this.opts = opts;
 
-        if (opts is null)
-            Environment.Exit(1);
-
-        this.query = opts.queryToks is null ? "" : string.Join(' ', this.opts.queryToks).Trim();
+        this.query = opts.queryToks is null ? "" : string.Join(' ', opts.queryToks).Trim();
         if (this.query.Length == 0)
         {
             Console.Error.WriteLine("Empty query - exiting...");
@@ -52,7 +42,8 @@ public class Cli
         bool isValid(ScraperRecord r) =>
             r.ContentUrl is not null && r.ContentIsPlaintext && allowedTypes.Contains(r.Type);
 
-        searchResults = SearchUG(query).Where(i => isValid(i)).ToArray();
+        SearchUG(query);
+        searchResults = searchResults!.Where(i => isValid(i)).ToArray();
 
         if (searchResults.Length == 0)
         {
@@ -61,7 +52,7 @@ public class Cli
         }
 
         var searchLookup = searchResults.ToDictionary(i => i.ScrapeUid, i => i);
-        uint choiceUid = GetFzfUserInput(searchResults);
+        uint choiceUid = GetFzfUserInput();
         ScraperRecord searchRecord = searchLookup[choiceUid];
 
         PageScraper pageScraper = new();
@@ -128,13 +119,14 @@ public class Cli
         return fzfProc;
     }
 
-    private uint GetFzfUserInput(ScraperRecord[] searchResults)
+    private uint GetFzfUserInput()
     {
+        Process fzfProc = MakeFzfProc();
         fzfProc.Start();
 
         // {uid};{song_name} ?{part} by {artist} ({content_type}) ?v{version}
         StringBuilder sb = new();
-        foreach (ScraperRecord r in searchResults)
+        foreach (ScraperRecord r in searchResults!)
         {
             sb.Clear();
 
@@ -179,6 +171,8 @@ public class Cli
 
     private string PageContentPrettify(ScraperRecord r)
     {
+        const string youtubeWatchUrl = "https://www.youtube.com/watch?v=";
+
         if (r.Content is null || r.Content.Trim().Length == 0)
             return "### NO CONTENT ###";
 
@@ -195,22 +189,18 @@ public class Cli
         }
     }
 
-    private ScraperRecord[] SearchUG(string query)
+    private void SearchUG(string query)
     {
-        ScraperRecord[] results;
         try
         {
             searchScraper.LoadData(query);
-            results = searchScraper.GetSearchResults();
+            this.searchResults = searchScraper.GetSearchResults();
         }
         catch (ScraperException e)
         {
             Console.Error.WriteLine($"An error occured: {e.Message}");
             Console.Error.WriteLine(e.StackTrace);
             Environment.Exit(1);
-            return null; // someone should tell the compiler about the noreturn function attribute
         }
-
-        return results;
     }
 }

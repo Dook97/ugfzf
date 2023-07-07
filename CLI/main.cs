@@ -5,7 +5,7 @@ namespace CLI;
 
 class Options
 {
-    [Option('t', "types", Required = false, Default = "ctubdv",
+    [Option('t', "types", Required = false, Default = "ct",
             HelpText = "Allowed content types ([c]hords, [t]abs, [u]kulele, [b]ass, [d]rums, [v]ideo)")]
     public string? Types { get; init; }
 
