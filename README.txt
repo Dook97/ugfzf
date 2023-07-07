@@ -42,12 +42,28 @@ Using the program is very straightforward. Invoke it with
 After it is done loading the required data, a selection
 window will appear. You can type to narrow down your options
 or change your selection with the up and down keys. Select
-the item you like by hitting enter. If you change your mind,
-you can also quit without choosing anything - just hit Esc,
-Ctrl-c or Ctrl-d.
+the item you like by hitting enter or select multiple by
+pressing <Tab>. If you change your mind, you can also quit
+without choosing anything - just hit Esc, Ctrl-c or Ctrl-d.
 
 The contents of your selection will then be printed to
 stdout.
+
+You can also specify several command line options:
+
+-t, --types       (Default: ct) Set allowed content types
+
+possible values: [c]hords, [t]abs, [u]kulele, [b]ass,
+                 [d]rums, [v]ideo
+
+-m, --no-multi    (Default: false) Disallow multi-selection
+
+--url             (Default: false) Disable interactive
+                  selection and scrape provided URLs instead.
+
+--help            Display help.
+
+--version         Display version information.
 
                       [COMPATIBILITY]
 
