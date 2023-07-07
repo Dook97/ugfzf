@@ -6,27 +6,31 @@ using System.Web;
 namespace UGScraper;
 public class SearchScraper : BaseScraper
 {
-    /* About url parameters accepted by UG
-     *
-     * search_type - "title", "band" and possibly other stuff (eg forum posts)
-     * value       - URL/percent-encoded query
-     * page        - used when results don't fit on a single page; starts at 1
-     * type        - filter by content type; see enum contentType
-     *             - no "type" parameter means "all"
-     *             - multiple allowed types may be specified using multiple parameters
-     *               of the form type[n]=value, where n starts at 0
-     *
-     * This is a template search url to be filled by string.Format
-     */
+    /// <summary>
+    /// This is a template search url to be filled by string.Format.
+    ///
+    /// <list>
+    ///
+    /// About url parameters accepted by UG
+    ///
+    /// search_type - "title", "band" and possibly other stuff (eg forum posts)
+    /// value       - URL/percent-encoded query
+    /// page        - used when results don't fit on a single page; starts at 1
+    /// type        - filter by content type; see enum contentType
+    ///             - no "type" parameter means "all"
+    ///             - multiple allowed types may be specified using multiple parameters
+    ///               of the form type[n]=value, where n starts at 0
+    /// </list>
+    /// </summary>
     private const string searchMetaUrl =
         @"https://www.ultimate-guitar.com/search.php?search_type={0}&value={1}&page={{0}}";
-    // path to the json item which stores the search results for the current page
+    /// <summary> path to the json item which stores the search results for the current page </summary>
     private const string jsonSearchResultsPath = "store.page.data.results";
-    // path to the json item which stores info about number of search result pages
+    // <summary> path to the json item which stores info about number of search result pages </summary>
     private const string jsonPaginationPath = "store.page.data.pagination.total";
-    // an array of scraped data from each search page
+    // <summary> an array of scraped data from each search page </summary>
     private JsonNode[]? scrapeData;
-    // number of search result pages
+    // <summary> number of search result pages </summary>
     private uint pageCount;
 
     public SearchScraper()
@@ -43,6 +47,7 @@ public class SearchScraper : BaseScraper
 
         string baseSearchUrl = string.Format(searchMetaUrl, "title", urlEncodedQuery);
 
+        // We have to load the first page separately to find out, have many search results pages there are for the query.
         JsonNode initialPageUrl = ScrapeUrl(string.Format(baseSearchUrl, 1));
         JsonNode? pageCountNode = initialPageUrl.GetByPath(jsonPaginationPath);
         if (pageCountNode is null)
@@ -70,7 +75,7 @@ public class SearchScraper : BaseScraper
             scrapeData[i] = ScrapeUrl(string.Format(baseSearchUrl, i + 1));
     }
 
-    // return the results just as we got them from UG
+    /// <summary> return the results just as we got them from UG </summary>
     private List<JsonNode> GetSearchResultsRaw()
     {
         List<JsonNode> results = new();
@@ -90,6 +95,9 @@ public class SearchScraper : BaseScraper
         return results;
     }
 
+    /// <returns>
+    /// curated scraped data as a ScraperRecord.
+    /// </returns>
     public ScraperRecord[] GetSearchResults()
     {
         List<JsonNode> rawSearchResults = GetSearchResultsRaw();

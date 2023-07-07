@@ -40,6 +40,18 @@ static class ScraperTools
         }
     }
 
+    /// <summary>
+    /// Get a value from nested JsonNodes in a safe and simple way.
+    /// </summary>
+    /// <param name="node">
+    /// Root JsonNode - the path traversal begins here.
+    /// </param>
+    /// <param name="path">
+    /// '.' separated fields identifying the relative location of the desired entry.
+    /// </param>
+    /// <returns>
+    /// null if not found, else the requested node
+    /// </returns>
     public static JsonNode? GetByPath(this JsonNode node, string path)
     {
         JsonNode? output = node;
@@ -59,7 +71,9 @@ static class ScraperTools
     }
 }
 
-// values of URL parameter(s) denoting type of requested content
+/// <summary>
+/// Possible types of content UG provides.
+/// </summary>
 public enum contentType
 {
     video = 100, // page with a youtube embed link

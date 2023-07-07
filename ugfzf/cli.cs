@@ -9,13 +9,16 @@ using UGScraper;
 
 namespace CLI;
 
+/// <summary>
+/// Represents the user interface and its logic.
+/// </summary>
 class Cli
 {
     private SearchScraper searchScraper { get; }
     private PageScraper pageScraper { get; }
     private Options opts { get; }
-    private string query { get; }
-    private string[] cmdlineUrls { get; }
+    private string cmdlineQuery { get; } // if we're in interactive mode
+    private string[] cmdlineUrls { get; } // if in url-scraping mode
 
     private HashSet<contentType> allowedTypes { get; }
     private ScraperRecord[]? searchResults { get; set; }
@@ -26,8 +29,8 @@ class Cli
         this.pageScraper = new();
         this.opts = opts;
 
-        this.query = string.Join(' ', opts.queryToks).Trim();
-        if (this.query.Length == 0)
+        this.cmdlineQuery = string.Join(' ', opts.queryToks).Trim();
+        if (this.cmdlineQuery.Length == 0)
         {
             Console.Error.WriteLine("Empty query - exiting...");
             Environment.Exit(1);
@@ -45,6 +48,9 @@ class Cli
             SearchAndPrint();
     }
 
+    /// <summary>
+    /// Run the program in interactive mode (with fzf).
+    /// </summary>
     private void SearchAndPrint()
     {
         Console.Error.WriteLine("Searching - this may take a while");
@@ -53,13 +59,13 @@ class Cli
             r.ContentUrl is not null && r.ContentIsPlaintext && this.allowedTypes.Contains(r.Type);
 
         // this may spit out an exception and I'm ok with that
-        this.searchScraper.LoadData(this.query);
+        this.searchScraper.LoadData(this.cmdlineQuery);
         this.searchResults = this.searchScraper.GetSearchResults();
         this.searchResults = this.searchResults!.Where(i => isValid(i)).ToArray();
 
         if (this.searchResults.Length == 0)
         {
-            Console.Error.WriteLine($"Nothing was found for query '{this.query}'");
+            Console.Error.WriteLine($"Nothing was found for query '{this.cmdlineQuery}'");
             Environment.Exit(1);
         }
 
@@ -70,6 +76,9 @@ class Cli
         FetchAndPrint(pageUrls);
     }
 
+    /// <summary>
+    /// Consecutively fetch resources from the given URLs and, if valid, print their contents to stdout.
+    /// </summary>
     private void FetchAndPrint(string[] urls)
     {
         for (int i = 0; i < urls.Length; ++i)
@@ -105,6 +114,9 @@ class Cli
         }
     }
 
+    /// <summary>
+    /// Parse the value of the '-t/--types' cmdline option.
+    /// </summary>
     private HashSet<contentType> getAllowedTypes(string typestr)
     {
         HashSet<contentType> output = new();
@@ -134,6 +146,7 @@ class Cli
             }
         }
 
+        // if the user entered nonsense, just revert back to default
         if (output.Count == 0)
         {
             output.Add(contentType.chords);
@@ -143,10 +156,18 @@ class Cli
         return output;
     }
 
+    /// <summary>
+    /// Helper to setup a Process object for running fzf.
+    /// </summary>
     private Process MakeFzfProc()
     {
         Process fzfProc = new();
         fzfProc.StartInfo.FileName = "fzf";
+        // see man fzf, but brief explanation:
+        // -d: sets a delimeter character
+        // --with-nth: selects which fields to display (here we hide the UID, which is the first field)
+        // --nth: fields to exclude from search (we exclude the UID)
+        // +m or -m: disable or enable multi-select with <Tab>
         fzfProc.StartInfo.Arguments =
             """-d ";" --with-nth=2.. --nth=1 """ + (this.opts.NoMulti ? "+m" : "-m");
         fzfProc.StartInfo.RedirectStandardInput = true;
@@ -154,6 +175,16 @@ class Cli
         return fzfProc;
     }
 
+    /// <summary>
+    /// Run fzf, supply formated input to it and retrieve UIDs of
+    /// the selected items from its output.
+    ///
+    /// If fzf exits in an unexpected way, ugfzf will be killed as
+    /// well with a matching error message and exit code.
+    /// </summary>
+    /// <returns>
+    /// An array of UIDs of the selected ScraperRecords
+    /// </returns>
     private uint[] GetFzfUserInput()
     {
         Process fzfProc = MakeFzfProc();
@@ -164,7 +195,6 @@ class Cli
         foreach (ScraperRecord r in this.searchResults!)
         {
             sb.Clear();
-
             string?[] tokens = {
                 $"{r.ScrapeUid};{r.SongName ?? "Unknown"}",
                 r.Part,
@@ -203,11 +233,14 @@ class Cli
         var sr = new StringReader(fzfOut);
         var uids = new List<uint>();
         for (string? line; (line = sr.ReadLine()) is not null;)
-            uids.Add(uint.Parse(line.Substring(0, line.IndexOf(';'))));
+            uids.Add(uint.Parse(line.Substring(0, line.IndexOf(';')))); // let's pretend this is safe
 
         return uids.ToArray();
     }
 
+    /// <summary>
+    /// Converts the raw content string to something nicer looking.
+    /// </summary>
     private string PageContentPrettify(ScraperRecord r)
     {
         const string youtubeWatchUrl = "https://www.youtube.com/watch?v=";

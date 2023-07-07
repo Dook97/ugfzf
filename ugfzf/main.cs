@@ -4,7 +4,12 @@ using CommandLine;
 
 namespace CLI;
 
+// stop the compiler from complaining about things beyond its comprehension
 #nullable disable
+
+/// <summary>
+/// Holds command line arguments.
+/// </summary>
 class Options
 {
     [Option('t', "types", Required = false, Default = "ct",
@@ -22,6 +27,7 @@ class Options
     [Value(0, MetaName = "query", Required = true)]
     public IEnumerable<string> queryToks { get; init; }
 }
+
 #nullable enable
 
 class Program

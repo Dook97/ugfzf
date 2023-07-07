@@ -2,12 +2,18 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace UGScraper;
+
+/// <summary>
+/// Object encapsulating state and functionality needed for scraping contentful
+/// UG web documents, meaning documents containing tabs, chords etc.
+/// </summary>
 public class PageScraper : BaseScraper
 {
     // json path to the content of the site (like tabs or chords)
     private const string jsonDataPath = "store.page.data";
     // json containing all data as it was retrieved from UG
     private JsonNode? scrapeData;
+    // last scraped url
     private string? url;
 
     public PageScraper()
@@ -18,13 +24,18 @@ public class PageScraper : BaseScraper
 
     public override void LoadData(string url)
     {
-        this.scrapeData = null;
-        this.url = null;
-
         this.url = url;
         scrapeData = ScrapeUrl(url);
     }
 
+    /// <summary>
+    /// Provide the scraped and curated data in a user-friendly way in custom ScraperRecord type.
+    /// </summary>
+    /// <returns>
+    /// Scrape data deserialized into ScraperRecord.
+    ///
+    /// Includes the content.
+    /// </returns>
     public ScraperRecord GetRecord()
     {
         if (scrapeData is null)

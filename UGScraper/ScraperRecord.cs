@@ -2,6 +2,12 @@ using System;
 
 namespace UGScraper;
 
+/// <summary>
+/// Type containing curated information from the scraper.
+/// For search scraper records the content field will always be null.
+/// Be careful with this - UG is apparently kind of a mess and availability
+/// of this info is absolutely not guaranteed. Always check for the null case.
+/// </summary>
 public class ScraperRecord
 {
     public uint ScrapeUid { get; }
@@ -42,6 +48,9 @@ public class ScraperRecord
     }
 }
 
+/// <summary>
+/// Helper type for easy deserialization using reflection.
+/// </summary>
 class DeserializationRecord
 {
     public string? song_name { get; init; }
