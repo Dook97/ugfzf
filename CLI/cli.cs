@@ -205,7 +205,7 @@ class Cli
         var sr = new StringReader(fzfOut);
         var uids = new List<uint>();
         for (string? line; (line = sr.ReadLine()) is not null;)
-            uids.Add(uint.Parse(line.Substring(0, fzfOut.IndexOf(';'))));
+            uids.Add(uint.Parse(line.Substring(0, line.IndexOf(';'))));
 
         return uids.ToArray();
     }
