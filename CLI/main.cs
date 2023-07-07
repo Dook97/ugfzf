@@ -8,11 +8,15 @@ class Options
 {
     [Option('t', "types", Required = false, Default = "ct",
         HelpText = "Allowed content types ([c]hords, [t]abs, [u]kulele, [b]ass, [d]rums, [v]ideo)")]
-    public string Types { get; init; }
+    public string? Types { get; init; }
 
-    [Option('m', "multiple", Required = false, Default = false,
-        HelpText = "Allow selection of multiple items using <Tab>")]
+    [Option('m', "multiple", Required = false, Default = true,
+        HelpText = "Disallow selection of multiple items using <Tab>")]
     public bool Multi { get; init; }
+
+    [Option("url", Required = false, Default = false,
+        HelpText = "Bypass the interactive function and provide URLs to scrape instead.")]
+    public bool UrlScrape { get; init; }
 
     [Value(0, MetaName = "Search query", Required = true)]
     public IEnumerable<string>? queryToks { get; init; }

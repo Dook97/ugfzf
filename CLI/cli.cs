@@ -15,6 +15,7 @@ class Cli
     private PageScraper pageScraper { get; }
     private Options opts { get; }
     private string query { get; }
+    private string[] urls { get; }
 
     private HashSet<contentType> allowedTypes { get; }
     private ScraperRecord[]? searchResults { get; set; }
@@ -32,11 +33,24 @@ class Cli
             Console.Error.WriteLine("Empty query - exiting...");
             Environment.Exit(1);
         }
+        this.urls = opts.queryToks!.ToArray();
 
         this.allowedTypes = getAllowedTypes(opts.Types!);
     }
 
     public void Run()
+    {
+        if (opts.UrlScrape)
+        {
+            FetchAndPrint(this.urls);
+        }
+        else
+        {
+            SearchAndPrint();
+        }
+    }
+
+    private void SearchAndPrint()
     {
         Console.Error.WriteLine("Searching - this may take a while");
 
@@ -54,17 +68,27 @@ class Cli
 
         var searchLookup = searchResults.ToDictionary(i => i.ScrapeUid, i => i);
         uint[] choiceUids = GetFzfUserInput();
-        ScraperRecord[] pageRecords = choiceUids.Select(uid => searchLookup[uid]).ToArray();
+        string[] pageUrls = choiceUids.Select(uid => searchLookup[uid].ContentUrl!).ToArray();
 
-        FetchAndPrint(pageRecords);
+        FetchAndPrint(pageUrls);
     }
 
-    private void FetchAndPrint(ScraperRecord[] searchRecords)
+    private void FetchAndPrint(string[] urls)
     {
-        for (int i = 0; i < searchRecords.Length; ++i)
+        for (int i = 0; i < urls.Length; ++i)
         {
-            pageScraper.LoadData(searchRecords[i].ContentUrl!);
-            var pageRecord = pageScraper.GetRecord();
+            ScraperRecord pageRecord;
+            try
+            {
+                pageScraper.LoadData(urls[i]);
+                pageRecord = pageScraper.GetRecord();
+            }
+            catch (ScraperException e)
+            {
+                Console.Error.WriteLine();
+                Console.Error.WriteLine(e.Message);
+                continue;
+            }
 
             // blank line for separation
             if (i != 0)
@@ -189,11 +213,11 @@ class Cli
     {
         const string youtubeWatchUrl = "https://www.youtube.com/watch?v=";
 
-        if (r.Content is null || r.Content.Trim().Length == 0)
-            return "### NO CONTENT ###";
-
         if (!r.ContentIsPlaintext)
             return "### CONTENT NOT PLAINTEXT ###";
+
+        if (r.Content is null || r.Content.Trim().Length == 0)
+            return "### NO CONTENT ###";
 
         switch (r.Type)
         {
