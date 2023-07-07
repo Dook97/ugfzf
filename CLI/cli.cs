@@ -27,15 +27,15 @@ class Cli
         this.pageScraper = new();
         this.opts = opts;
 
-        this.query = opts.queryToks is null ? "" : string.Join(' ', opts.queryToks).Trim();
+        this.query = string.Join(' ', opts.queryToks).Trim();
         if (this.query.Length == 0)
         {
             Console.Error.WriteLine("Empty query - exiting...");
             Environment.Exit(1);
         }
-        this.urls = opts.queryToks!.ToArray();
+        this.urls = opts.queryToks.ToArray();
 
-        this.allowedTypes = getAllowedTypes(opts.Types!);
+        this.allowedTypes = getAllowedTypes(opts.Types);
     }
 
     public void Run()
@@ -149,7 +149,7 @@ class Cli
     {
         Process fzfProc = new();
         fzfProc.StartInfo.FileName = "fzf";
-        fzfProc.StartInfo.Arguments = """-d ";" --with-nth=2.. --nth=1 """ + (opts.Multi ? "-m" : "+m");
+        fzfProc.StartInfo.Arguments = """-d ";" --with-nth=2.. --nth=1 """ + (opts.NoMulti ? "+m" : "-m");
         fzfProc.StartInfo.RedirectStandardInput = true;
         fzfProc.StartInfo.RedirectStandardOutput = true;
         return fzfProc;
