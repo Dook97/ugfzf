@@ -1,11 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using UGScraper;
-using System.Collections.Generic;
-using System.Text;
-using System.Linq;
-using System.IO;
 
 namespace CLI;
 
@@ -40,13 +40,9 @@ class Cli
     public void Run()
     {
         if (this.opts.UrlScrape)
-        {
             FetchAndPrint(this.cmdlineUrls);
-        }
         else
-        {
             SearchAndPrint();
-        }
     }
 
     private void SearchAndPrint()
@@ -56,7 +52,9 @@ class Cli
         bool isValid(ScraperRecord r) =>
             r.ContentUrl is not null && r.ContentIsPlaintext && this.allowedTypes.Contains(r.Type);
 
-        SearchUG();
+        // this may spit out an exception and I'm ok with that
+        this.searchScraper.LoadData(this.query);
+        this.searchResults = this.searchScraper.GetSearchResults();
         this.searchResults = this.searchResults!.Where(i => isValid(i)).ToArray();
 
         if (this.searchResults.Length == 0)
@@ -86,7 +84,7 @@ class Cli
             {
                 Console.Error.WriteLine("\n### ERROR ###");
                 Console.Error.WriteLine(e.Message);
-                Console.Error.WriteLine(  "### ERROR ###");
+                Console.Error.WriteLine("### ERROR ###");
                 continue;
             }
 
@@ -227,21 +225,6 @@ class Cli
             default:
                 var contentMetaTextRgx = new Regex(@"\[/?(ch|tab)\]");
                 return contentMetaTextRgx.Replace(r.Content, "");
-        }
-    }
-
-    private void SearchUG()
-    {
-        try
-        {
-            this.searchScraper.LoadData(this.query);
-            this.searchResults = this.searchScraper.GetSearchResults();
-        }
-        catch (ScraperException e)
-        {
-            Console.Error.WriteLine($"An error occured: {e.Message}");
-            Console.Error.WriteLine(e.StackTrace);
-            Environment.Exit(1);
         }
     }
 }
