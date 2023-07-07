@@ -106,8 +106,8 @@ class Program
 
     static void Main(string[] args)
     {
-        string query = string.Join(' ', args);
-        if (query.Trim().Length == 0)
+        string query = string.Join(' ', args).Trim();
+        if (query.Length == 0)
         {
             Console.Error.WriteLine("Empty query - exiting...");
             Environment.Exit(1);
