@@ -5,6 +5,7 @@ using UGScraper;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using System.IO;
 
 namespace CLI;
 
@@ -52,14 +53,24 @@ class Cli
         }
 
         var searchLookup = searchResults.ToDictionary(i => i.ScrapeUid, i => i);
-        uint choiceUid = GetFzfUserInput();
-        ScraperRecord searchRecord = searchLookup[choiceUid];
+        uint[] choiceUids = GetFzfUserInput();
+        ScraperRecord[] pageRecords = choiceUids.Select(uid => searchLookup[uid]).ToArray();
 
-        PageScraper pageScraper = new();
-        pageScraper.LoadData(searchRecord.ContentUrl!); // safe - records with null url were discarded
-        ScraperRecord pageRecord = pageScraper.GetRecord();
+        FetchAndPrint(pageRecords);
+    }
 
-        Console.WriteLine(
+    private void FetchAndPrint(ScraperRecord[] searchRecords)
+    {
+        for (int i = 0; i < searchRecords.Length; ++i)
+        {
+            pageScraper.LoadData(searchRecords[i].ContentUrl!);
+            var pageRecord = pageScraper.GetRecord();
+
+            // blank line for separation
+            if (i != 0)
+                Console.WriteLine();
+
+            Console.WriteLine(
                 $"""
                 =======================================================
                 Song: {pageRecord.SongName}
@@ -69,6 +80,7 @@ class Cli
 
                 {PageContentPrettify(pageRecord)}
                 """);
+        }
     }
 
     private HashSet<contentType> getAllowedTypes(string typestr)
@@ -113,13 +125,13 @@ class Cli
     {
         Process fzfProc = new();
         fzfProc.StartInfo.FileName = "fzf";
-        fzfProc.StartInfo.Arguments = """-d ";" --with-nth=2.. --nth=1""";
+        fzfProc.StartInfo.Arguments = """-d ";" --with-nth=2.. --nth=1 """ + (opts.Multi ? "-m" : "+m");
         fzfProc.StartInfo.RedirectStandardInput = true;
         fzfProc.StartInfo.RedirectStandardOutput = true;
         return fzfProc;
     }
 
-    private uint GetFzfUserInput()
+    private uint[] GetFzfUserInput()
     {
         Process fzfProc = MakeFzfProc();
         fzfProc.Start();
@@ -165,8 +177,12 @@ class Cli
                 break;
         }
 
-        uint choiceUid = uint.Parse(fzfOut.Substring(0, fzfOut.IndexOf(';')));
-        return choiceUid;
+        var sr = new StringReader(fzfOut);
+        var uids = new List<uint>();
+        for (string? line; (line = sr.ReadLine()) is not null;)
+            uids.Add(uint.Parse(line.Substring(0, fzfOut.IndexOf(';'))));
+
+        return uids.ToArray();
     }
 
     private string PageContentPrettify(ScraperRecord r)

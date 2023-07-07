@@ -19,6 +19,9 @@ public class PageScraper : BaseScraper
 
     public override void LoadData(string url)
     {
+        this.scrapeData = null;
+        this.url = null;
+
         this.url = url;
         scrapeData = ScrapeUrl(url);
     }
