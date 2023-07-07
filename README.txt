@@ -31,7 +31,7 @@ Then simply clone this repo, cd into it and call
 
                        dotnet publish
 
-A binary will appear in "./CLI/bin/Release/net7.x"
+A binary will appear in "./ugfzf/bin/Release/net7.x"
 
                           [USAGE]
 
