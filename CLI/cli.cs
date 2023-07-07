@@ -107,6 +107,11 @@ class Program
     static void Main(string[] args)
     {
         string query = string.Join(' ', args);
+        if (query.Trim().Length == 0)
+        {
+            Console.Error.WriteLine("Empty query - exiting...");
+            Environment.Exit(1);
+        }
 
         // TODO: maybe start a separate thread which shows some animation?
         Console.Error.WriteLine("Searching - this may take a while");
