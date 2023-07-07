@@ -15,11 +15,10 @@ class Cli
     private PageScraper pageScraper { get; }
     private Options opts { get; }
     private string query { get; }
-    private string[] urls { get; }
+    private string[] cmdlineUrls { get; }
 
     private HashSet<contentType> allowedTypes { get; }
     private ScraperRecord[]? searchResults { get; set; }
-    private ScraperRecord[]? pagesContent { get; set; }
 
     public Cli(Options opts)
     {
@@ -33,16 +32,16 @@ class Cli
             Console.Error.WriteLine("Empty query - exiting...");
             Environment.Exit(1);
         }
-        this.urls = opts.queryToks.ToArray();
+        this.cmdlineUrls = opts.queryToks.ToArray();
 
         this.allowedTypes = getAllowedTypes(opts.Types);
     }
 
     public void Run()
     {
-        if (opts.UrlScrape)
+        if (this.opts.UrlScrape)
         {
-            FetchAndPrint(this.urls);
+            FetchAndPrint(this.cmdlineUrls);
         }
         else
         {
@@ -55,18 +54,18 @@ class Cli
         Console.Error.WriteLine("Searching - this may take a while");
 
         bool isValid(ScraperRecord r) =>
-            r.ContentUrl is not null && r.ContentIsPlaintext && allowedTypes.Contains(r.Type);
+            r.ContentUrl is not null && r.ContentIsPlaintext && this.allowedTypes.Contains(r.Type);
 
-        SearchUG(query);
-        searchResults = searchResults!.Where(i => isValid(i)).ToArray();
+        SearchUG();
+        this.searchResults = this.searchResults!.Where(i => isValid(i)).ToArray();
 
-        if (searchResults.Length == 0)
+        if (this.searchResults.Length == 0)
         {
-            Console.Error.WriteLine($"Nothing was found for query '{query}'");
+            Console.Error.WriteLine($"Nothing was found for query '{this.query}'");
             Environment.Exit(1);
         }
 
-        var searchLookup = searchResults.ToDictionary(i => i.ScrapeUid, i => i);
+        var searchLookup = this.searchResults.ToDictionary(i => i.ScrapeUid, i => i);
         uint[] choiceUids = GetFzfUserInput();
         string[] pageUrls = choiceUids.Select(uid => searchLookup[uid].ContentUrl!).ToArray();
 
@@ -80,13 +79,14 @@ class Cli
             ScraperRecord pageRecord;
             try
             {
-                pageScraper.LoadData(urls[i]);
-                pageRecord = pageScraper.GetRecord();
+                this.pageScraper.LoadData(urls[i]);
+                pageRecord = this.pageScraper.GetRecord();
             }
             catch (ScraperException e)
             {
-                Console.Error.WriteLine();
+                Console.Error.WriteLine("\n### ERROR ###");
                 Console.Error.WriteLine(e.Message);
+                Console.Error.WriteLine(  "### ERROR ###");
                 continue;
             }
 
@@ -149,7 +149,8 @@ class Cli
     {
         Process fzfProc = new();
         fzfProc.StartInfo.FileName = "fzf";
-        fzfProc.StartInfo.Arguments = """-d ";" --with-nth=2.. --nth=1 """ + (opts.NoMulti ? "+m" : "-m");
+        fzfProc.StartInfo.Arguments =
+            """-d ";" --with-nth=2.. --nth=1 """ + (this.opts.NoMulti ? "+m" : "-m");
         fzfProc.StartInfo.RedirectStandardInput = true;
         fzfProc.StartInfo.RedirectStandardOutput = true;
         return fzfProc;
@@ -162,7 +163,7 @@ class Cli
 
         // {uid};{song_name} ?{part} by {artist} ({content_type}) ?v{version}
         StringBuilder sb = new();
-        foreach (ScraperRecord r in searchResults!)
+        foreach (ScraperRecord r in this.searchResults!)
         {
             sb.Clear();
 
@@ -229,12 +230,12 @@ class Cli
         }
     }
 
-    private void SearchUG(string query)
+    private void SearchUG()
     {
         try
         {
-            searchScraper.LoadData(query);
-            this.searchResults = searchScraper.GetSearchResults();
+            this.searchScraper.LoadData(this.query);
+            this.searchResults = this.searchScraper.GetSearchResults();
         }
         catch (ScraperException e)
         {
