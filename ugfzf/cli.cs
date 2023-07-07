@@ -167,9 +167,10 @@ class Cli
         // -d: sets a delimeter character
         // --with-nth: selects which fields to display (here we hide the UID, which is the first field)
         // --nth: fields to exclude from search (we exclude the UID)
+        // --reverse: layout with the input on top; its better because <Tab> always moves the selection downwards
         // +m or -m: disable or enable multi-select with <Tab>
         fzfProc.StartInfo.Arguments =
-            """-d ";" --with-nth=2.. --nth=1 """ + (this.opts.NoMulti ? "+m" : "-m");
+            """-d ";" --with-nth=2.. --nth=1 --reverse """ + (this.opts.NoMulti ? "+m" : "-m");
         fzfProc.StartInfo.RedirectStandardInput = true;
         fzfProc.StartInfo.RedirectStandardOutput = true;
         return fzfProc;
