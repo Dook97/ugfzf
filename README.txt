@@ -52,6 +52,7 @@ stdout.
 You can also specify several command line options:
 
 -t, --types       (Default: ct) Set allowed content types
+                  for search.
 
 possible values: [c]hords, [t]abs, [u]kulele, [b]ass,
                  [d]rums, [v]ideo
