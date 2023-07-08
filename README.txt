@@ -29,7 +29,7 @@ You will need the following:
 
 Then simply clone this repo, cd into it and call
 
-                       dotnet publish
+            dotnet build --configuration release
 
 A binary will appear in "./ugfzf/bin/Release/net7.x"
 
@@ -69,8 +69,8 @@ possible values: [c]hords, [t]abs, [u]kulele, [b]ass,
                       [COMPATIBILITY]
 
 The program was tested on Linux and Windows 10. Macs will
-most probably do just fine, but you should really find it in
-you and use an OS for people with some notion of self-respect.
+most probably do just fine, but you should really use an OS
+for people with some notion of self-respect.
 
 ============================================================
 github.com/Dook97/ugfzf
