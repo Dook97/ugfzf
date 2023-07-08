@@ -12,11 +12,11 @@ namespace UGScraper;
 /// </summary>
 public abstract class BaseScraper
 {
-    // xpath identifier of the element which stores the data we need to scrape
+    // <summary> xpath identifier of the element which stores the data we need to scrape </summary>
     private const string xpathDataId = "//div[@class='js-store']";
-    // name of the atribute which stores the data
+    // <summary> name of the atribute which stores the data </summary>
     private const string htmlDataAttr = "data-content";
-    // unique identifier of the next scraped item
+    // <summary> unique identifier of the next scraped item </summary>
     private uint nextItemUid = 0;
     protected uint GetNextItemUid() => nextItemUid++;
 
@@ -68,5 +68,4 @@ public abstract class BaseScraper
 
         return scrapeData;
     }
-
 }

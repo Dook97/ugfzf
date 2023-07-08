@@ -65,7 +65,7 @@ class Cli
 
         if (this.searchResults.Length == 0)
         {
-            Console.Error.WriteLine($"Nothing was found for query '{this.cmdlineQuery}'");
+            Console.Error.WriteLine($"No entry of specified type was found for query '{this.cmdlineQuery}'");
             Environment.Exit(1);
         }
 
@@ -83,6 +83,10 @@ class Cli
     {
         for (int i = 0; i < urls.Length; ++i)
         {
+            // blank line for separation
+            if (i != 0)
+                Console.WriteLine();
+
             ScraperRecord pageRecord;
             try
             {
@@ -91,16 +95,15 @@ class Cli
             }
             catch (ScraperException e)
             {
-                Console.Error.WriteLine("\n### ERROR ###");
-                Console.Error.WriteLine(e.Message);
-                Console.Error.WriteLine("### ERROR ###");
+                Console.WriteLine($"""
+                    ### ERROR ###
+                    {e.Message}
+                    ### ERROR ###
+                    """);
                 continue;
             }
 
-            // blank line for separation
-            if (i != 0)
-                Console.WriteLine();
-
+            // TODO: user defined output format
             Console.WriteLine(
                 $"""
                 =======================================================

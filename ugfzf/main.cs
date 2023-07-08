@@ -34,7 +34,7 @@ class Program
 {
     static void Main(string[] args)
     {
-        var opts = Parser.Default.ParseArguments<Options>(args).Value;
+        Options? opts = Parser.Default.ParseArguments<Options>(args).Value;
 
         // the parser library prints its own error message, we just have to quit
         if (opts is null)

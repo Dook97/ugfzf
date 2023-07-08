@@ -4,6 +4,9 @@ using System.Text.Json.Nodes;
 using System.Web;
 
 namespace UGScraper;
+/// <summary>
+/// Object encapsulating state and functionality needed for scraping search queries off of UG.
+/// </summary>
 public class SearchScraper : BaseScraper
 {
     /// <summary>
