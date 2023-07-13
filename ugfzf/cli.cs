@@ -53,7 +53,7 @@ class Cli
     /// </summary>
     private void SearchAndPrint()
     {
-        Console.Error.WriteLine("Searching - this may take a while");
+        Console.Error.Write("Searching - this may take a while");
 
         bool isValid(ScraperRecord r) =>
             r.ContentUrl is not null && r.ContentIsPlaintext && this.allowedTypes.Contains(r.Type);
@@ -62,6 +62,13 @@ class Cli
         this.searchScraper.LoadData(this.cmdlineQuery);
         this.searchResults = this.searchScraper.GetSearchResults();
         this.searchResults = this.searchResults!.Where(i => isValid(i)).ToArray();
+
+        // some ANSI escape code magic to remove the "Searching" text from stderr
+        var stderr = Console.OpenStandardError();
+        stderr.WriteByte(0x1b);
+        Console.Error.Write("[1G"); // move cursor to beggining of line
+        stderr.WriteByte(0x1b);
+        Console.Error.Write("[0K"); // clear line right of cursor
 
         if (this.searchResults.Length == 0)
         {
