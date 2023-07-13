@@ -1,4 +1,5 @@
 using System;
+using System.Web;
 
 namespace UGScraper;
 
@@ -44,7 +45,7 @@ public class ScraperRecord
         this.ArtistUrl = r.artist_url;
         this.ContentUrl = r.tab_url;
         this.Tuning = r.tuning;
-        this.Content = r.content?.Replace("\r\n", Environment.NewLine);
+        this.Content = HttpUtility.HtmlDecode(r.content?.Replace("\r\n", Environment.NewLine));
     }
 }
 
